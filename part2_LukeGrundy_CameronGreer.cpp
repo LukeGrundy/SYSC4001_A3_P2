@@ -93,7 +93,7 @@ void TA_process(int id, shared_data *shm)
     }
 }
 
-int sem_wait(int smeid, int semnum){
+int sem_wait(int semid, int semnum){
     struct sembuf op;
     op.sem_num = semnum;
     op.sem_op = -1;
@@ -180,19 +180,36 @@ int main(int argc, char **argv)
         cerr << "Error: Unable to open exams directory: " << argv[2] << endl;
         return -1;
     }
+    struct dirent *dir;
+    dir = readdir(d); // Read first entry
+    // Load the first exam into shared memory
+    string file_path = string(argv[2]) + string("/") + string(dir->d_name);
+    ifstream exam_file(file_path);
+    if (exam_file.is_open())
+    {
+        string line;
+        getline(exam_file, line);
+        shm->current_exam.student_id = stoi(line); // Get student ID
+        for (int i = 0; i < NUM_QUESTIONS - 1; i++)
+        {
+            shm->current_exam.questions_marked[i] = false; // Initialize all questions as unmarked
+        }
+        exam_file.close();
+    }
+    closedir(d);
 
-    sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
+    int sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
     if (sem_id < 0){
-	std::cout << "Error: semget" << std::endl;
-	cleanup(shmid, -1, shared);
-	return 1;
+    std::cout << "Error: semget" << std::endl;
+    cleanup(shm_id, -1, shm);
+    return 1;
     }
 
     if (sem_set(sem_id, SEM_RUBRIC, 1) < 0 || sem_set(sem_id, SEM_EXAM_LOAD, 1) < 0 ||
-	sem_set(sem_id, SEM_MARK_ASSIGN, 1) < 0){
-	std::cout << "Error: sem_set" << std::endl;
-	cleanup(shmid, -1, shared);
-	return 1;
+    sem_set(sem_id, SEM_MARK_ASSIGN, 1) < 0){
+    std::cout << "Error: sem_set" << std::endl;
+    cleanup(shm_id, -1, shm);
+    return 1;
     }
     // With the list of processes, run the simulation
     // auto [exec] = run_simulation(list_process);

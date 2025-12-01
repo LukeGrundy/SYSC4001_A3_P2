@@ -21,6 +21,8 @@
 #include <dirent.h>
 #include <iostream>
 #include <fstream>
+#include <sys/sem.h>
+#include <sys/ipc.h>
 
 #define NUM_QUESTIONS 5
 #define NUM_EXAMS 21
@@ -149,7 +151,7 @@ void cleanup(int shmid, int semid, shared_data *shm_ptr){
 	shmdt(shm_ptr);
     }
     if (shmid >= 0){
-	shmctl(shmid, IPC_RMID, NULL):
+	shmctl(shmid, IPC_RMID, NULL);
     }
     if (semid >= 0){
 	semctl(semid, 0, IPC_RMID);
