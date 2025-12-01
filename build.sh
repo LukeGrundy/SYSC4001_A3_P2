@@ -1,7 +1,2 @@
-if [ ! -d "bin" ]; then
-    mkdir bin
-else
-	rm bin/*
-fi
-
-g++ -g -O0 -I . -o bin/part2 part2_LukeGrundy_CameronGreer.cpp
+g++ part2_LukeGrundy_CameronGreer.cpp -o part2
+./part2 rubric.txt ./exams 2 > outputs/output.txt 2>&1 &
