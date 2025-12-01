@@ -79,6 +79,43 @@ void TA_process(int id, shared_data *shm)
     }
 }
 
+int sem_wait(int smeid, int semnum){
+    struct sembuf op;
+    op.sem_num = semnum;
+    op.sem_op = -1;
+    op.sem_flg = 0;
+    return semop(semid, &op, 1);
+}
+
+int sem_signal(int semid, int semnum){
+    struct sembuf op;
+    op.sem_num = semnum;
+    op.sem_op = 1;
+    op.sem_flg = 0;
+    return semop(semid, &op, 1);
+}
+
+int sem_trywait(int semid, int semnum){
+    struct sembuf op;
+    op.sem_num = semnum;
+    op.sem_op = -1;
+    op.sem_flg = IPC_NOWAIT;
+    if (semop(semid, &op, 1) == 0){
+	return 0;
+    }
+    return -1;
+}
+
+int sem_set(int semid, int semnum, int val){
+    union semun {
+	int val;
+	struct semid_ds *buf;
+	unsigned short *array;
+    } arg;
+    arg.val = val;
+    return semctl(semid, semnum, SETVAL, arg);
+}
+
 int main(int argc, char **argv)
 { // code originally from part 1
 
