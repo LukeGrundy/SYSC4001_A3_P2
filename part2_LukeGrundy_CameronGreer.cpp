@@ -92,6 +92,7 @@ void TA_process(int id, shared_data *shm, int sem_id)
                 shm->marked_exams[shm->total_exams_marked - 1] = shm->current_exam.student_id;
                 cout << "TA " << id << " has fully marked exam for student " << shm->current_exam.student_id << endl;
                 load_next_exam(shm, id); // Load next exam
+                break;
             }
         }
     }
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
     /////////////////////////////
 
     ///// Fork TA's /////
-    for (int i = 0; i < number_of_TAs; i++)
+    for (int i = 1; i < number_of_TAs + 1; i++)
     {
         pid_t pid = fork();
         if (pid == 0)

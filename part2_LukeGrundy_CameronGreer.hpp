@@ -119,7 +119,7 @@ void load_next_exam(shared_data *shm, int TA_id)
     struct dirent *dir;
     dir = readdir(d); // Read first entry
     // Iterate to the exam that needs to be loaded
-    if (dir != nullptr)
+    if (dir->d_name[0] == '.')
     {
         for (int i = 0; i < shm->total_exams_marked; i++)
         {

@@ -3,6 +3,7 @@
         "*.md": "markdown",
         "string": "cpp",
         "fstream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "ostream": "cpp"
     }
 }
