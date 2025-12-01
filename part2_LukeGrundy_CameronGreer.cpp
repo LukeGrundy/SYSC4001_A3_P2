@@ -79,7 +79,7 @@ void TA_process(int id, shared_data *shm)
     }
 }
 
-int sem_wait(int smeid, int semnum){
+int sem_wait(int semid, int semnum){
     struct sembuf op;
     op.sem_num = semnum;
     op.sem_op = -1;
