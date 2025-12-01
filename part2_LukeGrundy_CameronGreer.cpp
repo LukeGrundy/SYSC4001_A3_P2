@@ -27,11 +27,11 @@ void TA_process(int id, shared_data *shm, int sem_id)
                     std::cout << "Error: sem_wait rubric" << std::endl;
                     continue;
                 }
-                cout << "TA " << id << " is correcting rubric question " << i << endl;
+                cout << "TA " << id << " is correcting rubric question " << i + 1 << endl;
                 random_delay(0.5, 1.0); // Simulate time taken to correct
                 correct_rubric_question(shm->rb, i);
                 shm->total_rubric_corrections++;
-                cout << "TA " << id << " finished correcting rubric question " << i << endl;
+                cout << "TA " << id << " finished correcting rubric question " << i + 1 << endl;
                 if (sem_signal(sem_id, SEM_RUBRIC) != 0)
                 {
                     std::cout << "Error: sem_signal rubric" << std::endl;
