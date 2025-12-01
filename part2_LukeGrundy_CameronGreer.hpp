@@ -21,6 +21,8 @@
 #include <dirent.h>
 #include <iostream>
 #include <fstream>
+#include <sys/sem.h>
+#include <sys/ipc.h>
 
 #define NUM_QUESTIONS 5
 #define NUM_EXAMS 21
