@@ -83,15 +83,16 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // Parse the entire input file and populate a rubric vector.
+    // Parse the input file to populate a rubric vector.
     // To do so, the add_process() helper function is used (see include file).
     string line;
     vector<rubric> list_questions;
     while (getline(input_file, line))
     {
+        int i = 0;
         auto input_tokens = split_delim(line, ", ");
-        struct rubric = load_rubric(input_tokens);
-        list_process.push_back(new_process);
+        shm->rubric.questions[i] = input_tokens[1]; 
+        i++;
     }
     input_file.close();
 

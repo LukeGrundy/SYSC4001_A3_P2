@@ -23,11 +23,12 @@
 #include <fstream>
 
 #define NUM_QUESTIONS 5
+#define NUM_EXAMS 21
 
 using namespace std;
 
 struct rubric{
-    std::string questions[4];
+    std::string questions[NUM_QUESTIONS];
 };
 
 struct exam{
@@ -36,8 +37,8 @@ struct exam{
 };
 
 struct shared_data {
-    rubric questions[NUM_QUESTIONS];
-    exam exams[21];
+    rubric rubric;
+    exam exams[NUM_EXAMS];
     int total_questions_graded;
     int total_TAs_working;
     int running = 1;
@@ -75,8 +76,7 @@ void load_rubric(vector<string> input_tokens, shared_data *shm) {
     }
 
     for (size_t i = 0; i < NUM_QUESTIONS; i++) {
-
-        shm->questions[i].questions[i] = input_tokens[i];
+        shm->rubric.questions[i] = input_tokens[i];
     }
 }
 
