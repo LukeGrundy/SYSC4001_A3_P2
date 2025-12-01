@@ -18,10 +18,10 @@ void TA_process(int id, shared_data *shm) {
     for (int i = 0; i < NUM_QUESTIONS; i++) {
         bool needs_correction = (rand() % 2) == 0; //50% chance
         if (needs_correction) {
-            std::cout << "TA " << id << " is correcting rubric question " << i << std::endl;
+            cout << "TA " << id << " is correcting rubric question " << i << endl;
             random_delay(0.5, 1.0); //Simulate time taken to correct
             shm->total_questions_graded++;
-            std::cout << "TA " << id << " finished correcting rubric question " << i << std::endl;
+            cout << "TA " << id << " finished correcting rubric question " << i << endl;
         }
     }
     
@@ -40,9 +40,9 @@ void TA_process(int id, shared_data *shm) {
         //Critical section end
 
         if (question_to_mark != -1) {
-            std::cout << "TA " << id << " is marking question " << question_to_mark << std::endl;
+            cout << "TA " << id << " is marking question " << question_to_mark << endl;
             random_delay(1.0, 2.0); //Simulate time taken to mark
-            std::cout << "TA " << id << " finished marking question " << question_to_mark << std::endl;
+            cout << "TA " << id << " finished marking question " << question_to_mark << endl;
         }
     }
 
@@ -51,8 +51,8 @@ int main(int argc, char** argv) {//code originally from part 1
 
     //Get the input file from the user
     if(argc != 3) {
-        std::cout << "ERROR!\nExpected 2 arguments, received " << argc - 1 << std::endl;
-        std::cout << "To run the program, do: ./part2 <your_rubric.txt> <number_of_TAs>" << std::endl;
+        cout << "ERROR!\nExpected 2 arguments, received " << argc - 1 << endl;
+        cout << "To run the program, do: ./part2 <your_rubric.txt> <number_of_TAs>" << endl;
         return -1;
     }
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {//code originally from part 1
     //To do so, the add_process() helper function is used (see include file).
     std::string line;
     std::vector<rubric> list_questions;
-    while(std::getline(input_file, line)) {
+    while(getline(input_file, line)) {
         auto input_tokens = split_delim(line, ", ");
         auto new_process = add_process(input_tokens);
         list_process.push_back(new_process);

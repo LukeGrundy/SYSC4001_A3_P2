@@ -24,6 +24,8 @@
 
 #define NUM_QUESTIONS 5
 
+using namespace std;
+
 struct rubric{
     std::string questions[4];
 };
