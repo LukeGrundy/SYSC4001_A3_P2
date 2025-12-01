@@ -78,9 +78,9 @@ void TA_process(int id, shared_data *shm, int sem_id)
 
             if (question_to_mark != -1)
             {
-                cout << "TA " << id << " is marking question " << question_to_mark << endl;
+                cout << "TA " << id << " is marking question " << question_to_mark + 1<< endl;
                 random_delay(1.0, 2.0); // Simulate time taken to mark
-                cout << "TA " << id << " finished marking question " << question_to_mark << endl;
+                cout << "TA " << id << " finished marking question " << question_to_mark + 1 << endl;
             }
 
             // If all questions are marked, update exams marked count and add student ID to marked exams
