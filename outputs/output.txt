@@ -1,1 +1,0 @@
-bash: ./bin/part2: No such file or directory
