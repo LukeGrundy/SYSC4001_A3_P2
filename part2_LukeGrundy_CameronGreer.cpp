@@ -9,7 +9,7 @@
 
 #include "part2_LukeGrundy_CameronGreer.hpp"
 
-void TA_process(int id, shared_data *shm, int semid)
+void TA_process(int id, shared_data *shm, int sem_id)
 {
     while (shm->running)
     {
@@ -22,19 +22,21 @@ void TA_process(int id, shared_data *shm, int semid)
             bool needs_correction = (rand() % 2) == 0; // 50% chance
             if (needs_correction)
             {
-           	if (sem_wait(sem_id, SEM_RUBRIC) != 0){
-		    std::cout << "Error: sem_wait rubric" << std::endl;
-		    continue;
-		}
-	        cout << "TA " << id << " is correcting rubric question " << i << endl;
+                if (sem_wait(sem_id, SEM_RUBRIC) != 0)
+                {
+                    std::cout << "Error: sem_wait rubric" << std::endl;
+                    continue;
+                }
+                cout << "TA " << id << " is correcting rubric question " << i << endl;
                 random_delay(0.5, 1.0); // Simulate time taken to correct
                 correct_rubric_question(shm->rb, i);
                 shm->total_rubric_corrections++;
                 cout << "TA " << id << " finished correcting rubric question " << i << endl;
-                if (sem_signal(sem_id, SEM_RUBRIC) != 0){
-		    std::cout << "Error: sem_signal rubric" << std::endl;
-		}
-	    }
+                if (sem_signal(sem_id, SEM_RUBRIC) != 0)
+                {
+                    std::cout << "Error: sem_signal rubric" << std::endl;
+                }
+            }
         }
 
         // Begin marking exam questions
@@ -46,10 +48,11 @@ void TA_process(int id, shared_data *shm, int semid)
             int question_to_mark = -1; // Index of question TA is marking, -1 indicates no question assigned yet
 
             // Critical section start
-	    if (sem_wait(sem_id, SEM_MARK_ASSIGN) != 0){
-		    std::cout << "Error: sem_wait mark assign" << std::endl;
-		    continue;
-		}
+            if (sem_wait(sem_id, SEM_MARK_ASSIGN) != 0)
+            {
+                std::cout << "Error: sem_wait mark assign" << std::endl;
+                continue;
+            }
             if (shm->total_questions_graded < NUM_QUESTIONS)
             {
                 cout << "TA " << id << " is selecting next question to mark." << endl;
@@ -67,9 +70,10 @@ void TA_process(int id, shared_data *shm, int semid)
                 question_to_mark = shm->total_questions_graded;
                 shm->total_questions_graded++;
             }
-	    if (sem_signal(sem_id, SEM_MARK_ASSIGN) != 0){
-		    std::cout << "Error: sem_signal mark assign" << std::endl;
-		}
+            if (sem_signal(sem_id, SEM_MARK_ASSIGN) != 0)
+            {
+                std::cout << "Error: sem_signal mark assign" << std::endl;
+            }
             // Critical section end
 
             if (question_to_mark != -1)
@@ -93,7 +97,8 @@ void TA_process(int id, shared_data *shm, int semid)
     }
 }
 
-int sem_wait(int semid, int semnum){
+int sem_wait(int semid, int semnum)
+{
     struct sembuf op;
     op.sem_num = semnum;
     op.sem_op = -1;
@@ -101,7 +106,8 @@ int sem_wait(int semid, int semnum){
     return semop(semid, &op, 1);
 }
 
-int sem_signal(int semid, int semnum){
+int sem_signal(int semid, int semnum)
+{
     struct sembuf op;
     op.sem_num = semnum;
     op.sem_op = 1;
@@ -109,19 +115,22 @@ int sem_signal(int semid, int semnum){
     return semop(semid, &op, 1);
 }
 
-int sem_trywait(int semid, int semnum){
+int sem_trywait(int semid, int semnum)
+{
     struct sembuf op;
     op.sem_num = semnum;
     op.sem_op = -1;
     op.sem_flg = IPC_NOWAIT;
-    if (semop(semid, &op, 1) == 0){
-	return 0;
+    if (semop(semid, &op, 1) == 0)
+    {
+        return 0;
     }
     return -1;
 }
 
-int sem_set(int semid, int semnum, int val){
-    return semctl(semid, semnum, SETVAL, arg.val);
+int sem_set(int semid, int semnum, int val)
+{
+    return semctl(semid, semnum, SETVAL, val);
 }
 
 int main(int argc, char **argv)
@@ -137,13 +146,14 @@ int main(int argc, char **argv)
 
     int number_of_TAs = atoi(argv[3]); // Convert the 2nd argument to an integer representing the number of TAs
 
-///// Create Shared Memory //////
+    ///// Create Shared Memory //////
     int shm_id = shmget(IPC_PRIVATE, sizeof(shared_data), IPC_CREAT | 0666); // Shared memory ID
-    if (shm_id < 0){
-	std::cout << "Error: shmget" << std::endl;
+    if (shm_id < 0)
+    {
+        std::cout << "Error: shmget" << std::endl;
         return -1;
     }
-    shared_data *shm = (shared_data *)shmat(shm_id, nullptr, 0);             // Shared memory pointer
+    shared_data *shm = (shared_data *)shmat(shm_id, nullptr, 0); // Shared memory pointer
 
     shm->total_questions_graded = 0;
     shm->total_TAs_working = 0;
@@ -151,107 +161,125 @@ int main(int argc, char **argv)
     shm->total_exams_marked = 0;
     shm->total_rubric_corrections = 0;
 
-    for (int i = 0; i < NUM_QUESTIONS; i++){
-	shm->current_exam.questions[i] = false;
+    for (int i = 0; i < NUM_QUESTIONS; i++)
+    {
+        shm->current_exam.questions_marked[i] = false;
     }
-////////////////////////////////
+    ////////////////////////////////
 
-///// Load Rubric FIle /////
+    ///// Load Rubric FIle /////
     ifstream input_file(argv[1]);
-    if (!input_file.is_open()){
-	std::cout << "Error: unable to open rubric file" << std::endl;
-	return -1;
+    if (!input_file.is_open())
+    {
+        std::cout << "Error: unable to open rubric file" << std::endl;
+        return -1;
     }
 
     string line;
     int question_index = 0;
 
-    while(getline(input_file, line)){
-	if (question_index >= NUM_QUESTIONS){
-	    break;
-	}
-	auto tokens = split_delim(line, ", ");
-	if (tokens.size() < 2){
-	    std::cout << "Invalid rubric formatting" << std::endl;
-	    continue;
-	}
-	strcpy(shm->rb.questions[question_index], tokens[1].c_str(), 255);
-	question_index++;
+    while (getline(input_file, line))
+    {
+        if (question_index >= NUM_QUESTIONS)
+        {
+            break;
+        }
+        auto tokens = split_delim(line, ", ");
+        if (tokens.size() < 2)
+        {
+            std::cout << "Invalid rubric formatting" << std::endl;
+            continue;
+        }
+        // strcpy(shm->rb.questions[question_index], tokens[1].c_str(), 255);
+        question_index++;
     }
     input_file.close();
-////////////////////////////
+    ////////////////////////////
 
-///// Load Exam FIle //////
+    ///// Load Exam FIle //////
     DIR *d = opendir(argv[2]);
-    if (!d){
-	std::cout << "Error: unable to open exam directory" << std::endl;
-	return -1;
+    if (!d)
+    {
+        std::cout << "Error: unable to open exam directory" << std::endl;
+        return -1;
     }
     struct dirent *dir;
     bool exam_loaded = false;
-    while ((dir = readdir(d)) != nullptr){
-	if (dir->d_name[0] == '.'){
-	    continue;
-	}
-	string file_path = string(argv[2]) + "/" + dir->d_name;
-	ifstream exam_file(file_path);
+    while ((dir = readdir(d)) != nullptr)
+    {
+        if (dir->d_name[0] == '.')
+        {
+            continue;
+        }
+        string file_path = string(argv[2]) + "/" + dir->d_name;
+        ifstream exam_file(file_path);
 
-	if (!exam_file.is_open()){
-	    continue;
-	}
+        if (!exam_file.is_open())
+        {
+            continue;
+        }
 
-	getline(exam_file, line);
-	shm->current_exam.student_id = stoi(line);
+        getline(exam_file, line);
+        shm->current_exam.student_id = stoi(line);
 
-	for (int i = 0; i < NUM_QUESTIONS; i++){
-	    sgm->current_exam.questions_marked[i] = false;
-	}
+        for (int i = 0; i < NUM_QUESTIONS; i++)
+        {
+            shm->current_exam.questions_marked[i] = false;
+        }
 
-	exam_loaded = true;
-	exam_file.close();
-	break;
+        exam_loaded = true;
+        exam_file.close();
+        break;
     }
-    closedir();
+    closedir(d);
 
-    if (!exam_loaded){
-	std::cout << "Error: no exam files found" << std::endl;
-	return -1;
+    if (!exam_loaded)
+    {
+        std::cout << "Error: no exam files found" << std::endl;
+        return -1;
     }
-///////////////////////////
+    ///////////////////////////
 
-
-///// Create Semaphores /////
+    ///// Create Semaphores /////
     int sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
-    if (sem_id < 0){
-    std::cout << "Error: semget" << std::endl;
-    cleanup(sem_id, -1, shm);
-    return 1;
+    if (sem_id < 0)
+    {
+        std::cout << "Error: semget" << std::endl;
+        cleanup(sem_id, -1, shm);
+        return 1;
     }
 
     if (sem_set(sem_id, SEM_RUBRIC, 1) < 0 || sem_set(sem_id, SEM_EXAM_LOAD, 1) < 0 ||
-    sem_set(sem_id, SEM_MARK_ASSIGN, 1) < 0){
-    std::cout << "Error: sem_set" << std::endl;
-    cleanup(sem_id, -1, shm);
-    return 1;
+        sem_set(sem_id, SEM_MARK_ASSIGN, 1) < 0)
+    {
+        std::cout << "Error: sem_set" << std::endl;
+        cleanup(sem_id, -1, shm);
+        return 1;
     }
-/////////////////////////////
+    /////////////////////////////
 
-///// Fork TA's /////
-    for (int i = 0; i < number_of_TAs; i++){
-	pid_t pid = fork();
-	if (pid == 0){
-	    TA_process(i, shm, sem_id);
-	    exit(0);
-	} else if (pid < 0){
-	    std::cout << "Error: fork" << std::endl;
+    ///// Fork TA's /////
+    for (int i = 0; i < number_of_TAs; i++)
+    {
+        pid_t pid = fork();
+        if (pid == 0)
+        {
+            TA_process(i, shm, sem_id);
+            exit(0);
         }
-////////////////////
+        else if (pid < 0)
+        {
+            std::cout << "Error: fork" << std::endl;
+        }
+        ////////////////////
 
-// make sure processes wait for their children to be terminated
-    for (int i = 0; i < number_of_TAs; i++){
-	wait(NULL);
+        // make sure processes wait for their children to be terminated
+        for (int i = 0; i < number_of_TAs; i++)
+        {
+            wait(NULL);
+        }
+
+        cleanup(shm_id, sem_id, shm);
+        return 0;
     }
-
-    claenup(shm_id, sem_id, shm);
-    return 0;
 }
