@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     // Get the input files from the user
     if (argc != 4)
     {
-        cout << "ERROR!\nExpected 2 arguments, received " << argc - 1 << endl;
+        cout << "ERROR!\nExpected 3 arguments, received " << argc - 1 << endl;
         cout << "To run the program, do: ./part2 <your_rubric.txt> <./your_exam_directory> <number_of_TAs>" << endl;
         return -1;
     }
