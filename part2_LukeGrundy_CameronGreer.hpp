@@ -28,21 +28,30 @@
 using namespace std;
 
 struct rubric{
-    std::string questions[NUM_QUESTIONS];
+    std::string questions[NUM_QUESTIONS - 1];
 };
 
 struct exam{
     int student_id;
-    bool questions_marked[NUM_QUESTIONS];
+    bool questions_marked[NUM_QUESTIONS - 1];
 };
 
 struct shared_data {
-    rubric rubric;
-    exam exams[NUM_EXAMS];
-    int total_questions_graded;
-    int total_TAs_working;
-    int running = 1;
+    // RUBRIC AND RUBRIC METRICS
+    rubric rb;                       // The rubric for the exam
+    int total_rubric_corrections;    // Number of rubric revisions made
+
+    // EXAM AND EXAM METRICS
+    exam current_exam;               // The current exam being marked
+    int total_questions_graded;      // Number of questions graded so far
+    int total_exams_marked;          // Number of exams fully marked
+
+    // TA METRICS
+    int marked_exams[NUM_EXAMS];     // Student IDs of marked exams
+    int total_TAs_working;           // Number of TAs currently working
+    int running = 1;                 // Flag to indicate if TAs should keep working
 };
+
 
 //----------------------------------------------------------
 //                  HELPER FUNCTIONS
@@ -54,11 +63,11 @@ void random_delay(double min_sec, double max_sec) {
 }
 
 // Following function was taken from part 1 taken from stackoverflow; helper function for splitting strings
-std::vector<std::string> split_delim(std::string input, std::string delim) {
-    std::vector<std::string> tokens;
-    std::size_t pos = 0;
-    std::string token;
-    while ((pos = input.find(delim)) != std::string::npos) {
+vector<string> split_delim(string input, string delim) {
+    vector<std::string> tokens;
+    size_t pos = 0;
+    string token;
+    while ((pos = input.find(delim)) != string::npos) {
         token = input.substr(0, pos);
         tokens.push_back(token);
         input.erase(0, pos + delim.length());
@@ -68,16 +77,24 @@ std::vector<std::string> split_delim(std::string input, std::string delim) {
     return tokens;
 }
 
-void load_rubric(vector<string> input_tokens, shared_data *shm) {
-    ifstream file("rubric.txt");
-    if (!file.is_open()) {
-        cerr << "Error: Unable to open rubric file." << endl;
-        return;
+//Writes a string to a file (also from part 1)
+void write_output(std::string execution, const char* filename) {
+    std::ofstream output_file(filename);
+
+    if (output_file.is_open()) {
+        output_file << execution;
+        output_file.close();  // Close the file when done
+        std::cout << "File content overwritten successfully." << std::endl;
+    } else {
+        std::cerr << "Error opening file!" << std::endl;
     }
 
-    for (size_t i = 0; i < NUM_QUESTIONS; i++) {
-        shm->rubric.questions[i] = input_tokens[i];
-    }
+    std::cout << "Output generated in " << filename << ".txt" << std::endl;
+}
+
+void correct_rubric_question(rubric &rubric, int question_index) {
+    // Simulate rubric correction by adding 1 to the curent ascii value of the question string
+    rubric.questions[question_index] += 1;
 }
 
 #endif
