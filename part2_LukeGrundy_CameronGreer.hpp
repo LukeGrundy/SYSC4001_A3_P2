@@ -33,7 +33,7 @@ using namespace std;
 
 struct rubric
 {
-    std::string questions[NUM_QUESTIONS - 1];
+    char questions[NUM_QUESTIONS][16];
 };
 
 struct exam

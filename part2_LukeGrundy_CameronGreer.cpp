@@ -22,12 +22,19 @@ void TA_process(int id, shared_data *shm)
             bool needs_correction = (rand() % 2) == 0; // 50% chance
             if (needs_correction)
             {
-                cout << "TA " << id << " is correcting rubric question " << i << endl;
+           	if (sem_wait(sem_id, SEM_RUBRIC) != 0){
+		    std::cout << "Error: sem_wait rubric" << std::endl;
+		    continue;
+		}
+	        cout << "TA " << id << " is correcting rubric question " << i << endl;
                 random_delay(0.5, 1.0); // Simulate time taken to correct
                 correct_rubric_question(shm->rb, i);
                 shm->total_rubric_corrections++;
                 cout << "TA " << id << " finished correcting rubric question " << i << endl;
-            }
+                if (sem_signal(sem_id, SEM_RUBRIC) != 0){
+		    std::cout << "Error: sem_signal rubric" << std::endl;
+		}
+	    }
         }
 
         // Begin marking exam questions
@@ -39,6 +46,10 @@ void TA_process(int id, shared_data *shm)
             int question_to_mark = -1; // Index of question TA is marking, -1 indicates no question assigned yet
 
             // Critical section start
+	    if (sem_wait(sem_id, SEM_MARK_ASSIGN) != 0){
+		    std::cout << "Error: sem_wait mark assign" << std::endl;
+		    continue;
+		}
             if (shm->total_questions_graded < NUM_QUESTIONS)
             {
                 cout << "TA " << id << " is selecting next question to mark." << endl;
@@ -56,6 +67,9 @@ void TA_process(int id, shared_data *shm)
                 question_to_mark = shm->total_questions_graded;
                 shm->total_questions_graded++;
             }
+	    if (sem_signal(sem_id, SEM_MARK_ASSIGN) != 0){
+		    std::cout << "Error: sem_signal mark assign" << std::endl;
+		}
             // Critical section end
 
             if (question_to_mark != -1)
