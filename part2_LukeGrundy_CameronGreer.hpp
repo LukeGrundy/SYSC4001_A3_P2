@@ -24,24 +24,24 @@
 #include <sys/sem.h>
 #include <sys/ipc.h>
 
-#define NUM_QUESTIONS 5
+#define NUM_QUESTIONS 4
 #define NUM_EXAMS 21
 
-#define SEM_RUBRIC 0 // For protecting access to the rubric
-#define SEM_EXAM_LOAD 1 // For protecting the loading of exams
+#define SEM_RUBRIC 0      // For protecting access to the rubric
+#define SEM_EXAM_LOAD 1   // For protecting the loading of exams
 #define SEM_MARK_ASSIGN 2 // For protecting assigning marks
 
 using namespace std;
 
 struct rubric
 {
-    char questions[NUM_QUESTIONS][16];
+    std::string questions[NUM_QUESTIONS];
 };
 
 struct exam
 {
     int student_id;
-    bool questions_marked[NUM_QUESTIONS - 1];
+    bool questions_marked[NUM_QUESTIONS];
 };
 
 struct shared_data
@@ -117,44 +117,47 @@ void load_next_exam(shared_data *shm, int TA_id)
 {
     DIR *d = opendir("./exams");
     struct dirent *dir;
+    dir = readdir(d); // Read first entry
+    // Iterate to the exam that needs to be loaded
     if (dir != nullptr)
     {
-        if (dir->d_name == ".txt") // If the entry is a text file
+        for (int i = 0; i < shm->total_exams_marked; i++)
         {
-            for (int i = 0; i < shm->total_exams_marked; i++)
+            dir = readdir(d); // Skip already marked exams
+        }
+        // Load the exam file
+        string file_path = string("./exams/") + string(dir->d_name);
+        ifstream exam_file(file_path);
+        if (exam_file.is_open())
+        {
+            string line;
+            getline(exam_file, line);
+            shm->current_exam.student_id = stoi(line); // Get student ID
+            for (int i = 0; i < NUM_QUESTIONS; i++)
             {
-                dir = readdir(d); // Skip already marked exams
+                shm->current_exam.questions_marked[i] = false; // Initialize all questions as unmarked
             }
-            // Load the exam file
-            string file_path = string("./exams/") + string(dir->d_name);
-            ifstream exam_file(file_path);
-            if (exam_file.is_open())
-            {
-                string line;
-                getline(exam_file, line);
-                shm->current_exam.student_id = stoi(line); // Get student ID
-                for(int i = 0; i < NUM_QUESTIONS - 1; i++)
-                {
-                    shm->current_exam.questions_marked[i] = false; // Initialize all questions as unmarked
-                }
-                exam_file.close();
-                cout << "TA " << TA_id << " loaded exam for student " << shm->current_exam.student_id << endl;
-                closedir(d);
-                return; // Exit after loading one exam
-            }
+            exam_file.close();
+            cout << "TA " << TA_id << " loaded exam for student " << shm->current_exam.student_id << endl;
+            closedir(d);
+            return; // Exit after loading one exam
         }
     }
 }
 
-void cleanup(int shmid, int semid, shared_data *shm_ptr){
-    if (shm_ptr != NULL){
-	shmdt(shm_ptr);
+void cleanup(int shmid, int semid, shared_data *shm_ptr)
+{
+    if (shm_ptr != NULL)
+    {
+        shmdt(shm_ptr);
     }
-    if (shmid >= 0){
-	shmctl(shmid, IPC_RMID, NULL);
+    if (shmid >= 0)
+    {
+        shmctl(shmid, IPC_RMID, NULL);
     }
-    if (semid >= 0){
-	semctl(semid, 0, IPC_RMID);
+    if (semid >= 0)
+    {
+        semctl(semid, 0, IPC_RMID);
     }
 }
 
