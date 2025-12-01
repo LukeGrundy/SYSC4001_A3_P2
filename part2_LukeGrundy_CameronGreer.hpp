@@ -32,14 +32,15 @@ struct rubric{
 
 struct exam{
     int student_id;
-    bool questions_marked[4];
+    bool questions_marked[NUM_QUESTIONS];
 };
 
 struct shared_data {
-    rubric questions[4];
+    rubric questions[NUM_QUESTIONS];
     exam exams[21];
     int total_questions_graded;
     int total_TAs_working;
+    int running = 1;
 };
 
 //----------------------------------------------------------
@@ -66,5 +67,17 @@ std::vector<std::string> split_delim(std::string input, std::string delim) {
     return tokens;
 }
 
+void load_rubric(vector<string> input_tokens, shared_data *shm) {
+    ifstream file("rubric.txt");
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open rubric file." << endl;
+        return;
+    }
+
+    for (size_t i = 0; i < NUM_QUESTIONS; i++) {
+
+        shm->questions[i].questions[i] = input_tokens[i];
+    }
+}
 
 #endif

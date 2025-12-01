@@ -63,17 +63,23 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    int number_of_TAs = std::atoi(argv[2]); // Convert the 2nd argument to an integer representing the number of TAs
+    int number_of_TAs = atoi(argv[2]); // Convert the 2nd argument to an integer representing the number of TAs
+
+    int shm_id = shmget(IPC_PRIVATE, sizeof(shared_data), IPC_CREAT | 0666);    // Shared memory ID
+    shared_data *shm = (shared_data *) shmat(shm_id, nullptr, 0);               // Shared memory pointer
+
+    shm->total_questions_graded = 0;
+    shm->total_TAs_working = 0;
 
     // Open the input file
     auto file_name = argv[1];
-    std::ifstream input_file;
+    ifstream input_file;
     input_file.open(file_name);
 
     // Ensure that the file actually opens
     if (!input_file.is_open())
     {
-        std::cerr << "Error: Unable to open file: " << file_name << std::endl;
+        cerr << "Error: Unable to open file: " << file_name << endl;
         return -1;
     }
 
@@ -84,7 +90,7 @@ int main(int argc, char **argv)
     while (getline(input_file, line))
     {
         auto input_tokens = split_delim(line, ", ");
-        auto new_process = add_process(input_tokens);
+        struct rubric = load_rubric(input_tokens);
         list_process.push_back(new_process);
     }
     input_file.close();
