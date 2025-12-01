@@ -7,17 +7,13 @@
  * @date  December 30th, 2025
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/shm.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <dirent.h>
-#include <iostream>
 
 #include "part2_LukeGrundy_CameronGreer.hpp"
+
+void TA_process(int id, shared_data *shm) {
+
+}
+
 
 int main(int argc, char** argv) {//code originally from part 1
 
@@ -28,7 +24,7 @@ int main(int argc, char** argv) {//code originally from part 1
         return -1;
     }
 
-    int number_of_TAs = std::stoi(argv[2]);
+    int number_of_TAs = std::atoi(argv[2]); //Convert the 2nd argument to an integer representing the number of TAs
 
     //Open the input file
     auto file_name = argv[1];
@@ -56,6 +52,13 @@ int main(int argc, char** argv) {//code originally from part 1
     auto [exec] = run_simulation(list_process);
 
     write_output(exec, "execution.txt");
+
+    /* --- Generate TA processes --- */
+    for (int i = 0; i < number_of_TAs; i++) {
+        if (fork() == 0) {
+            TA_process(i, shm);
+        }
+    }
 
     return 0;
 }

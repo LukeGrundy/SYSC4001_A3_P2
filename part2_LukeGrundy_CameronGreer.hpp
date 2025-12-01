@@ -1,24 +1,46 @@
+/**
+ * 
+ * @file part2_LukeGrundy_CameronGreer.hpp
+ * @author Cameron Greer
+ * @author Luke Grundy
+ * 
+ * @date  December 30th, 2025
+ */
+
 #ifndef PART2_LukeGrundy_CameronGreer_HPP_
 #define PART2_LukeGrundy_CameronGreer_HPP_
 
-#include<iostream>
-#include<fstream>
-#include<string>
-#include<vector>
-#include<random>
-#include<utility>
-#include<sstream>
-#include<iomanip>
-#include <algorithm>
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <vector>
+#include <sys/shm.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <dirent.h>
+#include <iostream>
+#include <fstream>
 
-struct exam_file{
-    std::string     student_number;
-};
 
 struct rubric{
-    std::string     question_number_1;
-    std::string     question_number_2;
-    std::string     question_number_3;
-    std::string     question_number_4;
+    std::string     questions[4];
 };
+
+struct shared_data {
+    rubric questions[4];
+    int total_questions_graded;
+    int total_TAs_working;
+};
+
+//----------------------------------------------------------
+//                  HELPER FUNCTIONS
+//----------------------------------------------------------
+
+void random_delay(double min_sec, double max_sec) {
+    double t = min_sec + ((double) rand() / RAND_MAX) * (max_sec - min_sec);
+    usleep(t * 1000000);
+}
+
+
+#endif
