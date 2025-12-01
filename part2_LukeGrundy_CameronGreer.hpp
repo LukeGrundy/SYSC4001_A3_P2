@@ -25,6 +25,10 @@
 #define NUM_QUESTIONS 5
 #define NUM_EXAMS 21
 
+#define SEM_RUBRIC 0 // For protecting access to the rubric
+#define SEM_EXAM_LOAD 1 // For protecting the loading of exams
+#define SEM_MARK_ASSIGN 2 // For protecting assigning marks
+
 using namespace std;
 
 struct rubric
@@ -137,6 +141,18 @@ void load_next_exam(shared_data *shm, int TA_id)
                 return; // Exit after loading one exam
             }
         }
+    }
+}
+
+void cleanup(int shmid, int semid, shared_data *shm_ptr){
+    if (shm_ptr != NULL){
+	shmdt(shm_ptr);
+    }
+    if (shmid >= 0){
+	shmctl(shmid, IPC_RMID, NULL):
+    }
+    if (semid >= 0){
+	semctl(semid, 0, IPC_RMID);
     }
 }
 

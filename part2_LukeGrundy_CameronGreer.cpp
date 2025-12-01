@@ -167,6 +167,19 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
+    if (sem_id < 0){
+	std::cout << "Error: semget" << std::endl;
+	cleanup(shmid, -1, shared);
+	return 1;
+    }
+
+    if (sem_set(sem_id, SEM_RUBRIC, 1) < 0 || sem_set(sem_id, SEM_EXAM_LOAD, 1) < 0 ||
+	sem_set(sem_id, SEM_MARK_ASSIGN, 1) < 0){
+	std::cout << "Error: sem_set" << std::endl;
+	cleanup(shmid, -1, shared);
+	return 1;
+    }
     // With the list of processes, run the simulation
     // auto [exec] = run_simulation(list_process);
 
