@@ -11,8 +11,40 @@
 #include "part2_LukeGrundy_CameronGreer.hpp"
 
 void TA_process(int id, shared_data *shm) {
+    //Iterate through rubric
+    //  Decide randomly if rubric needs correcting
+    //  If so, correct it (0.5 to 1.0 seconds)
+    //  Update shared memory to reflect correction
+    for (int i = 0; i < NUM_QUESTIONS; i++) {
+        bool needs_correction = (rand() % 2) == 0; //50% chance
+        if (needs_correction) {
+            std::cout << "TA " << id << " is correcting rubric question " << i << std::endl;
+            random_delay(0.5, 1.0); //Simulate time taken to correct
+            shm->total_questions_graded++;
+            std::cout << "TA " << id << " finished correcting rubric question " << i << std::endl;
+        }
+    }
+    
+    //Begin marking exam questions
+    // TA choses next unmarked question from shared memory
+    //  Mark it (1.0 to 2.0 seconds)
+    //  Update shared memory to reflect marking}
+    while (shm->total_questions_graded < NUM_QUESTIONS) {
+        int question_to_mark = -1;
 
-}
+        //Critical section start
+        if (shm->total_questions_graded < NUM_QUESTIONS) {
+            question_to_mark = shm->total_questions_graded;
+            shm->total_questions_graded++;
+        }
+        //Critical section end
+
+        if (question_to_mark != -1) {
+            std::cout << "TA " << id << " is marking question " << question_to_mark << std::endl;
+            random_delay(1.0, 2.0); //Simulate time taken to mark
+            std::cout << "TA " << id << " finished marking question " << question_to_mark << std::endl;
+        }
+    }
 
 
 int main(int argc, char** argv) {//code originally from part 1

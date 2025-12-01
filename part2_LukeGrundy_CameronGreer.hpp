@@ -22,13 +22,20 @@
 #include <iostream>
 #include <fstream>
 
+#define NUM_QUESTIONS 5
 
 struct rubric{
-    std::string     questions[4];
+    std::string questions[4];
+};
+
+struct exam{
+    int student_id;
+    bool questions_marked[4];
 };
 
 struct shared_data {
     rubric questions[4];
+    exam exams[21];
     int total_questions_graded;
     int total_TAs_working;
 };
