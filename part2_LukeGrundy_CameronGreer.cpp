@@ -73,7 +73,7 @@ void TA_process(int id, shared_data *shm)
                 shm->total_exams_marked++;
                 shm->marked_exams[shm->total_exams_marked - 1] = shm->current_exam.student_id;
                 cout << "TA " << id << " has fully marked exam for student " << shm->current_exam.student_id << endl;
-                shm->total_questions_graded = 0;
+                load_next_exam(shm, id); // Load next exam
             }
         }
     }
@@ -82,15 +82,15 @@ void TA_process(int id, shared_data *shm)
 int main(int argc, char **argv)
 { // code originally from part 1
 
-    // Get the input file from the user
-    if (argc != 3)
+    // Get the input files from the user
+    if (argc != 4)
     {
         cout << "ERROR!\nExpected 2 arguments, received " << argc - 1 << endl;
-        cout << "To run the program, do: ./part2 <your_rubric.txt> <number_of_TAs>" << endl;
+        cout << "To run the program, do: ./part2 <your_rubric.txt> <./your_exam_directory> <number_of_TAs>" << endl;
         return -1;
     }
 
-    int number_of_TAs = atoi(argv[2]); // Convert the 2nd argument to an integer representing the number of TAs
+    int number_of_TAs = atoi(argv[3]); // Convert the 2nd argument to an integer representing the number of TAs
 
     int shm_id = shmget(IPC_PRIVATE, sizeof(shared_data), IPC_CREAT | 0666); // Shared memory ID
     shared_data *shm = (shared_data *)shmat(shm_id, nullptr, 0);             // Shared memory pointer
@@ -122,6 +122,13 @@ int main(int argc, char **argv)
         i++;
     }
     input_file.close();
+
+    // Open the exams directory
+    DIR *d = opendir(argv[2]);
+    if (!d){
+        cerr << "Error: Unable to open exams directory: " << argv[2] << endl;
+        return -1;
+    }
 
     // With the list of processes, run the simulation
     // auto [exec] = run_simulation(list_process);

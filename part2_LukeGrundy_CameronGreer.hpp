@@ -107,15 +107,36 @@ void correct_rubric_question(rubric &rubric, int question_index)
     rubric.questions[question_index] += 1;
 }
 
-void mark_exam_question(exam &exam, int question_index)
-{}
-
-void load_next_exam(shared_data *shm, int student_id)
+void load_next_exam(shared_data *shm, int TA_id)
 {
-    shm->current_exam.student_id = student_id;
-    for (int i = 0; i < NUM_QUESTIONS - 1; i++)
+    DIR *d = opendir("./exams");
+    struct dirent *dir;
+    if (dir != nullptr)
     {
-        shm->current_exam.questions_marked[i] = false;
+        if (dir->d_name == ".txt") // If the entry is a text file
+        {
+            for (int i = 0; i < shm->total_exams_marked; i++)
+            {
+                dir = readdir(d); // Skip already marked exams
+            }
+            // Load the exam file
+            string file_path = string("./exams/") + string(dir->d_name);
+            ifstream exam_file(file_path);
+            if (exam_file.is_open())
+            {
+                string line;
+                getline(exam_file, line);
+                shm->current_exam.student_id = stoi(line); // Get student ID
+                for(int i = 0; i < NUM_QUESTIONS - 1; i++)
+                {
+                    shm->current_exam.questions_marked[i] = false; // Initialize all questions as unmarked
+                }
+                exam_file.close();
+                cout << "TA " << TA_id << " loaded exam for student " << shm->current_exam.student_id << endl;
+                closedir(d);
+                return; // Exit after loading one exam
+            }
+        }
     }
 }
 
