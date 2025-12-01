@@ -54,7 +54,7 @@ void TA_process(int id, shared_data *shm)
             {
                 cout << "TA " << id << " is selecting next question to mark." << endl;
                 // Assign next question to mark to TA by finding the next unmarked question
-                for (int q = 0; q < NUM_QUESTIONS - 1; q++)
+                for (int q = 0; q < NUM_QUESTIONS; q++)
                 {
                     if (!shm->current_exam.questions_marked[q])
                     {
@@ -148,6 +148,9 @@ int main(int argc, char **argv)
 
     shm->total_questions_graded = 0;
     shm->total_TAs_working = 0;
+    shm->running = 1;
+    shm->total_exams_marked = 0;
+    shm->total_rubric_corrections = 0;
 
     // Open the input file
     auto file_name = argv[1];
@@ -201,14 +204,14 @@ int main(int argc, char **argv)
     int sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
     if (sem_id < 0){
     std::cout << "Error: semget" << std::endl;
-    cleanup(shm_id, -1, shm);
+    cleanup(sem_id, -1, shm);
     return 1;
     }
 
     if (sem_set(sem_id, SEM_RUBRIC, 1) < 0 || sem_set(sem_id, SEM_EXAM_LOAD, 1) < 0 ||
     sem_set(sem_id, SEM_MARK_ASSIGN, 1) < 0){
     std::cout << "Error: sem_set" << std::endl;
-    cleanup(shm_id, -1, shm);
+    cleanup(sem_id, -1, shm);
     return 1;
     }
     // With the list of processes, run the simulation
