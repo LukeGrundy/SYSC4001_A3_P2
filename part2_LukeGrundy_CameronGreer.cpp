@@ -79,42 +79,42 @@ void TA_process(int id, shared_data *shm)
     }
 }
 
-int sem_wait(int smeid, int semnum){
-    struct sembuf op;
-    op.sem_num = semnum;
-    op.sem_op = -1;
-    op.sem_flg = 0;
-    return semop(semid, &op, 1);
-}
+// int sem_wait(int smeid, int semnum){
+//     struct sembuf op;
+//     op.sem_num = semnum;
+//     op.sem_op = -1;
+//     op.sem_flg = 0;
+//     return semop(semid, &op, 1);
+// }
 
-int sem_signal(int semid, int semnum){
-    struct sembuf op;
-    op.sem_num = semnum;
-    op.sem_op = 1;
-    op.sem_flg = 0;
-    return semop(semid, &op, 1);
-}
+// int sem_signal(int semid, int semnum){
+//     struct sembuf op;
+//     op.sem_num = semnum;
+//     op.sem_op = 1;
+//     op.sem_flg = 0;
+//     return semop(semid, &op, 1);
+// }
 
-int sem_trywait(int semid, int semnum){
-    struct sembuf op;
-    op.sem_num = semnum;
-    op.sem_op = -1;
-    op.sem_flg = IPC_NOWAIT;
-    if (semop(semid, &op, 1) == 0){
-	return 0;
-    }
-    return -1;
-}
+// int sem_trywait(int semid, int semnum){
+//     struct sembuf op;
+//     op.sem_num = semnum;
+//     op.sem_op = -1;
+//     op.sem_flg = IPC_NOWAIT;
+//     if (semop(semid, &op, 1) == 0){
+// 	return 0;
+//     }
+//     return -1;
+// }
 
-int sem_set(int semid, int semnum, int val){
-    union semun {
-	int val;
-	struct semid_ds *buf;
-	unsigned short *array;
-    } arg;
-    arg.val = val;
-    return semctl(semid, semnum, SETVAL, arg);
-}
+// int sem_set(int semid, int semnum, int val){
+//     union semun {
+// 	int val;
+// 	struct semid_ds *buf;
+// 	unsigned short *array;
+//     } arg;
+//     arg.val = val;
+//     return semctl(semid, semnum, SETVAL, arg);
+// }
 
 int main(int argc, char **argv)
 { // code originally from part 1
@@ -166,6 +166,23 @@ int main(int argc, char **argv)
         cerr << "Error: Unable to open exams directory: " << argv[2] << endl;
         return -1;
     }
+    struct dirent *dir;
+    dir = readdir(d); // Read first entry
+    // Load the first exam into shared memory
+    string file_path = string(argv[2]) + string("/") + string(dir->d_name);
+    ifstream exam_file(file_path);
+    if (exam_file.is_open())
+    {
+        string line;
+        getline(exam_file, line);
+        shm->current_exam.student_id = stoi(line); // Get student ID
+        for (int i = 0; i < NUM_QUESTIONS - 1; i++)
+        {
+            shm->current_exam.questions_marked[i] = false; // Initialize all questions as unmarked
+        }
+        exam_file.close();
+    }
+    closedir(d);
 
     sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
     if (sem_id < 0){
