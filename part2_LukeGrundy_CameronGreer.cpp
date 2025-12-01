@@ -9,7 +9,7 @@
 
 #include "part2_LukeGrundy_CameronGreer.hpp"
 
-void TA_process(int id, shared_data *shm)
+void TA_process(int id, shared_data *shm, int semid)
 {
     while (shm->running)
     {
@@ -121,13 +121,7 @@ int sem_trywait(int semid, int semnum){
 }
 
 int sem_set(int semid, int semnum, int val){
-    union semun {
-	int val;
-	struct semid_ds *buf;
-	unsigned short *array;
-    } arg;
-    arg.val = val;
-    return semctl(semid, semnum, SETVAL, arg);
+    return semctl(semid, semnum, SETVAL, arg.val);
 }
 
 int main(int argc, char **argv)
@@ -143,61 +137,87 @@ int main(int argc, char **argv)
 
     int number_of_TAs = atoi(argv[3]); // Convert the 2nd argument to an integer representing the number of TAs
 
+///// Create Shared Memory //////
     int shm_id = shmget(IPC_PRIVATE, sizeof(shared_data), IPC_CREAT | 0666); // Shared memory ID
+    if (shm_id < 0){
+	std::cout << "Error: shmget" << std::endl;
+        return -1;
+    }
     shared_data *shm = (shared_data *)shmat(shm_id, nullptr, 0);             // Shared memory pointer
 
     shm->total_questions_graded = 0;
     shm->total_TAs_working = 0;
 
-    // Open the input file
-    auto file_name = argv[1];
-    ifstream input_file;
-    input_file.open(file_name);
+    for (int i = 0; i < NUM_QUESTIONS; i++){
+	shm->current_exam.questions[i] = false;
+    }
+////////////////////////////////
 
-    // Ensure that the file actually opens
-    if (!input_file.is_open())
-    {
-        cerr << "Error: Unable to open file: " << file_name << endl;
-        return -1;
+///// Load Rubric FIle /////
+    ifstream input_file(argv[1]);
+    if (!input_file.is_open()){
+	std::cout << "Error: unable to open rubric file" << std::endl;
+	return -1;
     }
 
-    // Parse the input file to populate a rubric vector.
-    // To do so, the add_process() helper function is used (see include file).
     string line;
-    vector<rubric> list_questions;
-    while (getline(input_file, line))
-    {
-        int i = 0;
-        auto input_tokens = split_delim(line, ", ");
-        shm->rb.questions[i] = input_tokens[1];
-        i++;
+    int question_index = 0;
+
+    while(getline(input_file, line)){
+	if (question_index >= NUM_QUESTIONS){
+	    break;
+	}
+	auto tokens = split_delim(line, ", ");
+	if (tokens.size() < 2){
+	    std::cout << "Invalid rubric formatting" << std::endl;
+	    continue;
+	}
+	strcpy(shm->rb.questions[question_index], tokens[1].c_str(), 255);
+	question_index++;
     }
     input_file.close();
+////////////////////////////
 
-    // Open the exams directory
+///// Load Exam FIle //////
     DIR *d = opendir(argv[2]);
     if (!d){
-        cerr << "Error: Unable to open exams directory: " << argv[2] << endl;
-        return -1;
+	std::cout << "Error: unable to open exam directory" << std::endl;
+	return -1;
     }
     struct dirent *dir;
-    dir = readdir(d); // Read first entry
-    // Load the first exam into shared memory
-    string file_path = string(argv[2]) + string("/") + string(dir->d_name);
-    ifstream exam_file(file_path);
-    if (exam_file.is_open())
-    {
-        string line;
-        getline(exam_file, line);
-        shm->current_exam.student_id = stoi(line); // Get student ID
-        for (int i = 0; i < NUM_QUESTIONS - 1; i++)
-        {
-            shm->current_exam.questions_marked[i] = false; // Initialize all questions as unmarked
-        }
-        exam_file.close();
-    }
-    closedir(d);
+    bool exam_loaded = false;
+    while ((dir = readdir(d)) != nullptr){
+	if (dir->d_name[0] == '.'){
+	    continue;
+	}
+	string file_path = string(argv[2]) + "/" + dir->d_name;
+	ifstream exam_file(file_path);
 
+	if (!exam_file.is_open()){
+	    continue;
+	}
+
+	getline(exam_file, line);
+	shm->current_exam.student_id = stoi(line);
+
+	for (int i = 0; i < NUM_QUESTIONS; i++){
+	    sgm->current_exam.questions_marked[i] = false;
+	}
+
+	exam_loaded = true;
+	exam_file.close();
+	break;
+    }
+    closedir();
+
+    if (!exam_loaded){
+	std::cout << "Error: no exam files found" << std::endl;
+	return -1;
+    }
+///////////////////////////
+
+
+///// Create Semaphores /////
     int sem_id = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
     if (sem_id < 0){
     std::cout << "Error: semget" << std::endl;
@@ -211,19 +231,24 @@ int main(int argc, char **argv)
     cleanup(shm_id, -1, shm);
     return 1;
     }
-    // With the list of processes, run the simulation
-    // auto [exec] = run_simulation(list_process);
+/////////////////////////////
 
-    // write_output(exec, "execution.txt");
-
-    /* --- Generate TA processes --- */
-    for (int i = 0; i < number_of_TAs; i++)
-    {
-        if (fork() == 0)
-        {
-            TA_process(i, shm);
+///// Fork TA's /////
+    for (int i = 0; i < number_of_TAs; i++){
+	pid_t pid = fork();
+	if (pid == 0){
+	    TA_process(i, shm, sem_id);
+	    exit(0);
+	} else if (pid < 0){
+	    std::cout << "Error: fork" << std::endl;
         }
+////////////////////
+
+// make sure processes wait for their children to be terminated
+    for (int i = 0; i < number_of_TAs; i++){
+	wait(NULL);
     }
 
+    claenup(shm_id, sem_id, shm);
     return 0;
 }
