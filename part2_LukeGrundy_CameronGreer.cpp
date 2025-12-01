@@ -36,11 +36,23 @@ void TA_process(int id, shared_data *shm)
         //   Update shared memory to reflect marking}
         while (shm->total_questions_graded < NUM_QUESTIONS)
         {
-            int question_to_mark = -1; // Indicates no question assigned yet
+            int question_to_mark = -1; // Index of question TA is marking, -1 indicates no question assigned yet
 
             // Critical section start
             if (shm->total_questions_graded < NUM_QUESTIONS)
             {
+                cout << "TA " << id << " is selecting next question to mark." << endl;
+                // Assign next question to mark to TA by finding the next unmarked question
+                for (int q = 0; q < NUM_QUESTIONS - 1; q++)
+                {
+                    if (!shm->current_exam.questions_marked[q])
+                    {
+                        question_to_mark = q;
+                        shm->current_exam.questions_marked[q] = true; // Mark as assigned
+                        cout << "TA " << id << " assigned question " << question_to_mark + 1 << " to mark." << endl;
+                        break;
+                    }
+                }
                 question_to_mark = shm->total_questions_graded;
                 shm->total_questions_graded++;
             }
@@ -51,6 +63,17 @@ void TA_process(int id, shared_data *shm)
                 cout << "TA " << id << " is marking question " << question_to_mark << endl;
                 random_delay(1.0, 2.0); // Simulate time taken to mark
                 cout << "TA " << id << " finished marking question " << question_to_mark << endl;
+            }
+
+            // If all questions are marked, update exams marked count and add student ID to marked exams
+            // Reset total_questions_graded for next exam
+            // Load next exam into shared memory
+            if (shm->total_questions_graded >= NUM_QUESTIONS)
+            {
+                shm->total_exams_marked++;
+                shm->marked_exams[shm->total_exams_marked - 1] = shm->current_exam.student_id;
+                cout << "TA " << id << " has fully marked exam for student " << shm->current_exam.student_id << endl;
+                shm->total_questions_graded = 0;
             }
         }
     }
@@ -101,9 +124,9 @@ int main(int argc, char **argv)
     input_file.close();
 
     // With the list of processes, run the simulation
-    //auto [exec] = run_simulation(list_process);
+    // auto [exec] = run_simulation(list_process);
 
-    //write_output(exec, "execution.txt");
+    // write_output(exec, "execution.txt");
 
     /* --- Generate TA processes --- */
     for (int i = 0; i < number_of_TAs; i++)
@@ -115,5 +138,4 @@ int main(int argc, char **argv)
     }
 
     return 0;
-
 }
